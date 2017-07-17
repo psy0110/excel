@@ -1,0 +1,50 @@
+Sub mima2()
+  Dim sht As Worksheet, rng As Range
+  Dim shell As Variant
+  On Error Resume Next
+  
+  Application.Calculation = xlManual
+  Application.DisplayAlerts = False
+    Application.ScreenUpdating = False                '冻结屏幕，以防屏幕抖动
+  
+  Set shell = CreateObject("Shell.Application")
+    
+    Set filePath = shell.BrowseForFolder(&O0, "选择文件夹", &H1 + &H10, "")   '获取文件夹路径地址
+    Set shell = Nothing
+    
+    If filePath Is Nothing Then                 '检测是否获得有效路径，如取消直接跳出程序
+         Exit Sub
+    Else
+       gg = filePath.Items.Item.Path
+       
+    End If
+    
+    
+    Set obj = CreateObject("Scripting.FileSystemObject")   '定义变量   设置fso对象
+    
+    Set fld = obj.GetFolder(gg)                            '设置fso的父文件夹fld
+     
+    
+    For Each f In fld.Files
+         
+        Set wb = Workbooks.Open(gg & "\" & f.Name, UpdateLinks:=0) '打开xlsx文件，并指定给wb  wb是一个对象，所以用set赋值   Set wb = Workbooks.Open(gg & "\" & f.Name)
+
+        For Each sht In wb.Worksheets
+        With sht
+          .Unprotect Password:="jzt600998"  '撤销工作表保护
+          .Range("A:IV").Locked = False  '取消所有单元格格式》保护 中的锁定选项
+          With .UsedRange.SpecialCells(xlCellTypeFormulas) '定位所有含有公式的单元格
+            .Locked = True     '选中所有单元格格式》保护 中的锁定选项
+           ' .FormulaHidden = True  '隐藏公式
+          End With
+          .Protect Password:="jzt600998"  '保护工作表，并将密码设置为aaa123
+        End With
+        Next
+        wb.Save
+        wb.Close
+    Next f
+    Application.ScreenUpdating = True       '冻结屏幕,此类语句一般成对使用
+    Application.DisplayAlerts = True
+    Application.Calculation = xlAutomatic
+    MsgBox "已修改完成，请查看"
+End Sub
